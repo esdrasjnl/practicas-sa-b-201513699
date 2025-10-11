@@ -1,0 +1,93 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-db
+    restart: always
+    env_file:
+      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      # Volumen de datos persistentes
+      - dbdata:/var/lib/mysql
+      # Script de inicialización SQL (solo se ejecuta al crear el contenedor por primera vez)
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  user-service:
+    build:
+      context: ./backend/user-service
+    image: ${DOCKER_USER}/user-service:${IMAGE_TAG_LATEST}
+    env_file:
+      - .env
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "4000:4000"
+
+  product-service:
+    build:
+      context: ./python-services/product-service
+    image: ${DOCKER_USER}/product-service:${IMAGE_TAG_LATEST}
+    env_file:
+      - .env
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "4100:4100"
+
+  orders-service:
+    build:
+      context: ./backend/orders-service
+    image: ${DOCKER_USER}/orders-service:${IMAGE_TAG_LATEST}
+    env_file:
+      - .env
+    depends_on:
+      user-service:
+        condition: service_started
+      product-service:
+        condition: service_started
+      mysql:
+        condition: service_healthy
+    ports:
+      - "4200:4200"
+
+  api-gateway:
+    build:
+      context: ./backend/api-gateway
+    image: ${DOCKER_USER}/api-gateway:${IMAGE_TAG_LATEST}
+    depends_on:
+      user-service:
+        condition: service_started
+      product-service:
+        condition: service_started
+      orders-service:
+        condition: service_started
+    ports:
+      - "3000:3000"
+
+  frontend:
+    build:
+      context: ./frontend
+    image: ${DOCKER_USER}/frontend:${IMAGE_TAG_LATEST}
+    ports:
+      - "8080:80"
+    depends_on:
+      api-gateway:
+        condition: service_started
+
+volumes:
+  dbdata:
