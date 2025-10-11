@@ -5,31 +5,36 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: rootpass
       MYSQL_DATABASE: appdb
-      MYSQL_USER: appuser
-      MYSQL_PASSWORD: apppass
-    ports:
-      - "3306:3306"
     volumes:
       - dbdata:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports: ["3306:3306"]
 
-  backend:
-    build: ./backend
+  user-service:
+    build: ./backend/user-service
     environment:
-      DB_HOST: mysql
-      DB_USER: appuser
-      DB_PASSWORD: apppass
-      DB_NAME: appdb
-    ports:
-      - "3000:3000"
-    depends_on:
-      - mysql
+      DB_HOST: mysql; DB_USER: root; DB_PASSWORD: rootpass; DB_NAME: appdb
+    depends_on: [mysql]
+    ports: ["4000:4000"]
 
-  frontend:
-    build: ./frontend
-    ports:
-      - "8080:80"
-    depends_on:
-      - backend
+  product-service:
+    build: ./python-services/product-service
+    environment:
+      DB_HOST: mysql; DB_USER: root; DB_PASSWORD: rootpass; DB_NAME: appdb
+    depends_on: [mysql]
+    ports: ["4100:4100"]
+
+  orders-service:
+    build: ./backend/orders-service
+    environment:
+      DB_HOST: mysql; DB_USER: root; DB_PASSWORD: rootpass; DB_NAME: appdb
+    depends_on: [user-service, product-service, mysql]
+    ports: ["4200:4200"]
+
+  api-gateway:
+    build: ./backend/api-gateway
+    depends_on: [user-service, product-service, orders-service]
+    ports: ["3000:3000"]
 
 volumes:
   dbdata:
