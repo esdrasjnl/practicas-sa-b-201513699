@@ -1,0 +1,62 @@
+name: CI-CD Practicas SA
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Login DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build & push user
+        uses: docker/build-push-action@v4
+        with:
+          context: ./backend/user-service
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/user-service:latest
+
+      - name: Build & push product
+        uses: docker/build-push-action@v4
+        with:
+          context: ./python-services/product-service
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/product-service:latest
+
+      - name: Build & push orders
+        uses: docker/build-push-action@v4
+        with:
+          context: ./backend/orders-service
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/orders-service:latest
+
+      - name: Build & push gateway
+        uses: docker/build-push-action@v4
+        with:
+          context: ./backend/api-gateway
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/api-gateway:latest
+
+  deploy:
+    needs: build-push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore Kubeconfig
+        run: |
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 --decode > $HOME/.kube/config
+          kubectl config view
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f k8s/secrets.yaml
+          kubectl apply -f k8s/mysql-statefulset.yaml
+          kubectl apply -f k8s/backend-deployments.yaml
+          kubectl apply -f k8s/ingress.yaml
+          kubectl -n practicas_sa get pods
