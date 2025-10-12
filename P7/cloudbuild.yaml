@@ -1,8 +1,13 @@
 # P7/cloudbuild.yaml
-# Cloud Build para compilar y desplegar los microservicios en GCP
+# Cloud Build para compilar, subir y desplegar los microservicios en GKE
 
 options:
   logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  _CLUSTER_NAME: "practicas-sa-cluster"
+  _CLUSTER_ZONE: "us-central1-c"
+  _NAMESPACE: "practicas-sa"
 
 steps:
   # Paso 1: Autenticación en Artifact Registry
@@ -18,7 +23,7 @@ steps:
     args:
       [
         'build',
-        '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices-repo/user-service:latest',
+        '-t', 'us-central1-docker.pkg.dev/groovy-treat-472922-b3/microservices-repo/user-service:latest',
         './backend/user-service'
       ]
 
@@ -27,7 +32,7 @@ steps:
     args:
       [
         'build',
-        '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices-repo/product-service:latest',
+        '-t', 'us-central1-docker.pkg.dev/groovy-treat-472922-b3/microservices-repo/product-service:latest',
         './backend/product-service'
       ]
 
@@ -36,7 +41,7 @@ steps:
     args:
       [
         'push',
-        'us-central1-docker.pkg.dev/$PROJECT_ID/microservices-repo/user-service:latest'
+        'us-central1-docker.pkg.dev/groovy-treat-472922-b3/microservices-repo/user-service:latest'
       ]
 
   # Paso 5: Push product-service
@@ -44,7 +49,7 @@ steps:
     args:
       [
         'push',
-        'us-central1-docker.pkg.dev/$PROJECT_ID/microservices-repo/product-service:latest'
+        'us-central1-docker.pkg.dev/groovy-treat-472922-b3/microservices-repo/product-service:latest'
       ]
 
   # Paso 6: Aplicar despliegue en Kubernetes
@@ -53,11 +58,11 @@ steps:
     args:
       - '-c'
       - |
-        gcloud container clusters get-credentials $CLUSTER_NAME --zone $CLUSTER_ZONE --project $PROJECT_ID
-        kubectl apply -f k8s/mysql-deployment.yaml
-        kubectl apply -f k8s/user-service-deployment.yaml
-        kubectl apply -f k8s/product-service-deployment.yaml
+        gcloud container clusters get-credentials $_CLUSTER_NAME --zone $_CLUSTER_ZONE --project groovy-treat-472922-b3
+        kubectl apply -f k8s/mysql-deployment.yaml -n $_NAMESPACE
+        kubectl apply -f k8s/user-service-deployment.yaml -n $_NAMESPACE
+        kubectl apply -f k8s/product-service-deployment.yaml -n $_NAMESPACE
 
 images:
-  - 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices-repo/user-service:latest'
-  - 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices-repo/product-service:latest'
+  - 'us-central1-docker.pkg.dev/groovy-treat-472922-b3/microservices-repo/user-service:latest'
+  - 'us-central1-docker.pkg.dev/groovy-treat-472922-b3/microservices-repo/product-service:latest'
