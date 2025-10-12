@@ -1,68 +1,58 @@
 # P7/cloudbuild.yaml
-# Cloud Build para compilar, subir y desplegar los microservicios en GKE
-
-options:
-  logging: CLOUD_LOGGING_ONLY
-
-substitutions:
-  _CLUSTER_NAME: "practicas-sa-cluster"
-  _CLUSTER_ZONE: "us-central1-c"
-  _NAMESPACE: "practicas-sa"
+# Cloud Build para desplegar microservicios en GKE usando imágenes públicas de Docker Hub
 
 steps:
-  # Paso 1: Autenticación en Artifact Registry
+  # Paso 1: Autenticación en GKE
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    id: 'Autenticación GKE'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        gcloud auth configure-docker us-central1-docker.pkg.dev
+        echo "Obteniendo credenciales del cluster..."
+        gcloud container clusters get-credentials practicas-sa-cluster \
+          --zone us-central1-c \
+          --project groovy-treat-472922-b3
 
-  # Paso 2: Build de user-service
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      [
-        'build',
-        '-t', 'us-central1-docker.pkg.dev/groovy-treat-472922-b3/microservices-repo/user-service:latest',
-        './backend/user-service'
-      ]
-
-  # Paso 3: Build de product-service
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      [
-        'build',
-        '-t', 'us-central1-docker.pkg.dev/groovy-treat-472922-b3/microservices-repo/product-service:latest',
-        './backend/product-service'
-      ]
-
-  # Paso 4: Push user-service
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      [
-        'push',
-        'us-central1-docker.pkg.dev/groovy-treat-472922-b3/microservices-repo/user-service:latest'
-      ]
-
-  # Paso 5: Push product-service
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      [
-        'push',
-        'us-central1-docker.pkg.dev/groovy-treat-472922-b3/microservices-repo/product-service:latest'
-      ]
-
-  # Paso 6: Aplicar despliegue en Kubernetes
+  # Paso 2: Desplegar MySQL (si es que no está desplegado)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    id: 'Desplegar MySQL'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        gcloud container clusters get-credentials $_CLUSTER_NAME --zone $_CLUSTER_ZONE --project groovy-treat-472922-b3
-        kubectl apply -f k8s/mysql-deployment.yaml -n $_NAMESPACE
-        kubectl apply -f k8s/user-service-deployment.yaml -n $_NAMESPACE
-        kubectl apply -f k8s/product-service-deployment.yaml -n $_NAMESPACE
+        echo "Aplicando despliegue de MySQL..."
+        kubectl apply -f k8s/mysql-deployment.yaml -n practicas-sa
 
-images:
-  - 'us-central1-docker.pkg.dev/groovy-treat-472922-b3/microservices-repo/user-service:latest'
-  - 'us-central1-docker.pkg.dev/groovy-treat-472922-b3/microservices-repo/product-service:latest'
+  # Paso 3: Desplegar user-service (usa imagen pública de Docker Hub)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    id: 'Desplegar User Service'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "Aplicando despliegue de User Service..."
+        kubectl apply -f k8s/user-service-deployment.yaml -n practicas-sa
+
+  # Paso 4: Desplegar product-service (usa imagen pública de Docker Hub)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    id: 'Desplegar Product Service'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "Aplicando despliegue de Product Service..."
+        kubectl apply -f k8s/product-service-deployment.yaml -n practicas-sa
+
+# Opcional: esperar a que los pods estén listos
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    id: 'Esperar Pods Listos'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "Esperando a que los pods estén listos..."
+        kubectl wait --for=condition=Ready pods --all -n practicas-sa --timeout=300s
+
+# Logs
+timeout: '1200s'
