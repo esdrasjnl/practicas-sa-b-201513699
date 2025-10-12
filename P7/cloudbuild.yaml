@@ -1,89 +1,63 @@
 # P7/cloudbuild.yaml
-# Cloud Build para compilar, subir imágenes a Artifact Registry y desplegar a GKE
+# Cloud Build para compilar y desplegar los microservicios en GCP
 
-substitutions:
-  _PROJECT_ID: "groovy-treat-472922-b3"   # Reemplaza con tu Project ID real
-  _REGION: "us-central1"
-  _CLUSTER: "practicas-sa-cluster"
-  _NAMESPACE: "practicas-sa"
-  _REPO: "microservices-repo"
+options:
+  logging: CLOUD_LOGGING_ONLY
 
 steps:
-  # 1. Configurar credenciales de gcloud
-  - name: "gcr.io/cloud-builders/gcloud"
-    entrypoint: "bash"
+  # Paso 1: Autenticación en Artifact Registry
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    entrypoint: 'bash'
     args:
-      - "-c"
+      - '-c'
       - |
-        echo "Autenticando con GCP..."
-        gcloud config set project $_PROJECT_ID
-        gcloud container clusters get-credentials $_CLUSTER --zone $_REGION
+        gcloud auth configure-docker us-central1-docker.pkg.dev
 
-  # 2. Build user-service
-  - name: "gcr.io/cloud-builders/docker"
+  # Paso 2: Build de user-service
+  - name: 'gcr.io/cloud-builders/docker'
     args:
       [
-        "build",
-        "-t", "us-central1-docker.pkg.dev/$_PROJECT_ID/$_REPO/user-service:latest",
-        "./backend/user-service"
+        'build',
+        '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices-repo/user-service:latest',
+        './backend/user-service'
       ]
 
-  # 3. Build product-service
-  - name: "gcr.io/cloud-builders/docker"
+  # Paso 3: Build de product-service
+  - name: 'gcr.io/cloud-builders/docker'
     args:
       [
-        "build",
-        "-t", "us-central1-docker.pkg.dev/$_PROJECT_ID/$_REPO/product-service:latest",
-        "./backend/product-service"
+        'build',
+        '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices-repo/product-service:latest',
+        './backend/product-service'
       ]
 
-  # 4. Push user-service
-  - name: "gcr.io/cloud-builders/docker"
+  # Paso 4: Push user-service
+  - name: 'gcr.io/cloud-builders/docker'
     args:
       [
-        "push",
-        "us-central1-docker.pkg.dev/$_PROJECT_ID/$_REPO/user-service:latest"
+        'push',
+        'us-central1-docker.pkg.dev/$PROJECT_ID/microservices-repo/user-service:latest'
       ]
 
-  # 5. Push product-service
-  - name: "gcr.io/cloud-builders/docker"
+  # Paso 5: Push product-service
+  - name: 'gcr.io/cloud-builders/docker'
     args:
       [
-        "push",
-        "us-central1-docker.pkg.dev/$_PROJECT_ID/$_REPO/product-service:latest"
+        'push',
+        'us-central1-docker.pkg.dev/$PROJECT_ID/microservices-repo/product-service:latest'
       ]
 
-  # 6. Desplegar a Kubernetes
-  - name: "gcr.io/cloud-builders/kubectl"
+  # Paso 6: Aplicar despliegue en Kubernetes
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
+    entrypoint: 'bash'
     args:
-      [
-        "apply",
-        "-f",
-        "./k8s/mysql-deployment.yaml",
-        "-n",
-        "$_NAMESPACE"
-      ]
-
-  - name: "gcr.io/cloud-builders/kubectl"
-    args:
-      [
-        "apply",
-        "-f",
-        "./k8s/user-service-deployment.yaml",
-        "-n",
-        "$_NAMESPACE"
-      ]
-
-  - name: "gcr.io/cloud-builders/kubectl"
-    args:
-      [
-        "apply",
-        "-f",
-        "./k8s/product-service-deployment.yaml",
-        "-n",
-        "$_NAMESPACE"
-      ]
+      - '-c'
+      - |
+        gcloud container clusters get-credentials $CLUSTER_NAME --zone $CLUSTER_ZONE --project $PROJECT_ID
+        kubectl apply -f k8s/mysql-deployment.yaml
+        kubectl apply -f k8s/user-service-deployment.yaml
+        kubectl apply -f k8s/product-service-deployment.yaml
 
 images:
-  - "us-central1-docker.pkg.dev/$_PROJECT_ID/$_REPO/user-service:latest"
-  - "us-central1-docker.pkg.dev/$_PROJECT_ID/$_REPO/product-service:latest"
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices-repo/user-service:latest'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices-repo/product-service:latest'
