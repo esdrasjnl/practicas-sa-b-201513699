@@ -1,0 +1,58 @@
+steps:
+  # Paso 1: Configurar gcloud y autenticación con Docker
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud auth configure-docker us-central1-docker.pkg.dev
+        gcloud container clusters get-credentials $CLUSTER_NAME --zone $CLUSTER_ZONE --project $PROJECT_ID
+
+  # Paso 2: Construir y subir user-service
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'build',
+        '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices-repo/user-service:latest',
+        './backend/user-service'
+      ]
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'push',
+        'us-central1-docker.pkg.dev/$PROJECT_ID/microservices-repo/user-service:latest'
+      ]
+
+  # Paso 3: Construir y subir product-service
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'build',
+        '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices-repo/product-service:latest',
+        './backend/product-service'
+      ]
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'push',
+        'us-central1-docker.pkg.dev/$PROJECT_ID/microservices-repo/product-service:latest'
+      ]
+
+  # Paso 4: Aplicar despliegues y servicios en GKE
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args:
+      ['apply', '-f', 'k8s/mysql-deployment.yaml', '-n', '$NAMESPACE']
+
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args:
+      ['apply', '-f', 'k8s/user-service-deployment.yaml', '-n', '$NAMESPACE']
+
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args:
+      ['apply', '-f', 'k8s/product-service-deployment.yaml', '-n', '$NAMESPACE']
+
+images:
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices-repo/user-service:latest'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices-repo/product-service:latest'
