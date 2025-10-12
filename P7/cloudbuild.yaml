@@ -26,9 +26,9 @@ steps:
     - '-c'
     - |
       echo "Aplicando namespace..."
-      kubectl apply -f k8s/namespace.yaml
+      kubectl apply -f ./k8s/namespace.yaml
       echo "Aplicando secretos..."
-      kubectl apply -f k8s/secrets.yaml
+      kubectl apply -f ./k8s/secrets.yaml
 
 # Despliegue de MySQL
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
@@ -38,7 +38,7 @@ steps:
     - '-c'
     - |
       echo "Desplegando MySQL..."
-      kubectl apply -f k8s/mysql-deployment.yaml -n $_NAMESPACE
+      kubectl apply -f ./k8s/mysql-deployment.yaml -n $_NAMESPACE
 
 # Despliegue User Service
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
@@ -48,7 +48,7 @@ steps:
     - '-c'
     - |
       echo "Desplegando User Service..."
-      kubectl apply -f k8s/user-service-deployment.yaml -n $_NAMESPACE
+      kubectl apply -f ./k8s/user-service-deployment.yaml -n $_NAMESPACE
 
 # Despliegue Product Service
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
@@ -58,17 +58,7 @@ steps:
     - '-c'
     - |
       echo "Desplegando Product Service..."
-      kubectl apply -f k8s/product-service-deployment.yaml -n $_NAMESPACE
-
-# Despliegue Frontend
-- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
-  dir: 'P7'
-  entrypoint: 'bash'
-  args:
-    - '-c'
-    - |
-      echo "Desplegando Frontend..."
-      kubectl apply -f k8s/frontend-deploy.yaml -n $_NAMESPACE
+      kubectl apply -f ./k8s/product-service-deployment.yaml -n $_NAMESPACE
 
 # Despliegue Ingress
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
@@ -78,7 +68,7 @@ steps:
     - '-c'
     - |
       echo "Desplegando Ingress..."
-      kubectl apply -f k8s/ingress.yaml -n $_NAMESPACE
+      kubectl apply -f ./k8s/ingress.yaml -n $_NAMESPACE
 
 # Esperar pods
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
