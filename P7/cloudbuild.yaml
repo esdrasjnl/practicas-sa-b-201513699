@@ -2,7 +2,7 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 steps:
-  # Paso 1: Autenticación y configuración de kubectl
+  # Paso 1: Configurar GKE
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
     id: 'Configurar GKE'
     entrypoint: 'bash'
@@ -24,7 +24,7 @@ steps:
         echo "Aplicando despliegue de MySQL..."
         kubectl apply -f k8s/mysql-deployment.yaml -n practicas-sa
 
-  # Paso 3: Desplegar user-service
+  # Paso 3: Desplegar User Service (Docker Hub)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
     id: 'Desplegar User Service'
     entrypoint: 'bash'
@@ -32,9 +32,10 @@ steps:
       - '-c'
       - |
         echo "Aplicando despliegue de User Service..."
+        sed -i 's|image:.*|image: esdrasjnl/user-service:latest|' k8s/user-service-deployment.yaml
         kubectl apply -f k8s/user-service-deployment.yaml -n practicas-sa
 
-  # Paso 4: Desplegar product-service
+  # Paso 4: Desplegar Product Service (Docker Hub)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
     id: 'Desplegar Product Service'
     entrypoint: 'bash'
@@ -42,9 +43,10 @@ steps:
       - '-c'
       - |
         echo "Aplicando despliegue de Product Service..."
+        sed -i 's|image:.*|image: esdrasjnl/product-service:latest|' k8s/product-service-deployment.yaml
         kubectl apply -f k8s/product-service-deployment.yaml -n practicas-sa
 
-  # Paso 5: Esperar a que los pods estén listos
+  # Paso 5: Esperar a que todos los pods estén listos
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
     id: 'Esperar Pods Listos'
     entrypoint: 'bash'
