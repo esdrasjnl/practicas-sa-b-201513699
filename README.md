@@ -321,7 +321,7 @@ kubectl port-forward svc/product-service 4000:4000 -n $NAMESPACE
 6. Ubicación del archivo: `cloudbuild.yaml` en tu repo.
 
 ### Paso 2: Crear archivo `cloudbuild.yaml` para CI/CD
-
+ 
 ```yaml
 steps:
 # Construir imagen User Service
