@@ -1,58 +1,75 @@
+# Cloud Build configuration para Practica 7 - SA
+# Construye imágenes Docker, las sube a Artifact Registry y despliega en GKE
+
+options:
+  logging: CLOUD_LOGGING_ONLY  # Evita errores de service account y logs
+
+substitutions:
+  _PROJECT_ID: "TU_PROJECT_ID"
+  _REGION: "us-central1"
+  _CLUSTER: "practicas-sa-cluster"
+  _NAMESPACE: "practicas-sa"
+  _REPO: "microservices-repo"
+
 steps:
-  # Paso 1: Configurar gcloud y autenticación con Docker
-  - name: 'gcr.io/cloud-builders/gcloud'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        gcloud auth configure-docker us-central1-docker.pkg.dev
-        gcloud container clusters get-credentials $CLUSTER_NAME --zone $CLUSTER_ZONE --project $PROJECT_ID
+# 1. Configurar GKE
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+  id: 'Set gcloud project and credentials'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      gcloud config set project ${_PROJECT_ID}
+      gcloud config set compute/region ${_REGION}
+      gcloud container clusters get-credentials ${_CLUSTER} --region ${_REGION}
 
-  # Paso 2: Construir y subir user-service
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      [
-        'build',
-        '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices-repo/user-service:latest',
-        './backend/user-service'
-      ]
+# 2. Build y push user-service
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Build user-service'
+  args:
+    [
+      'build',
+      '-t', 'us-central1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/user-service:latest',
+      './backend/user-service'
+    ]
 
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      [
-        'push',
-        'us-central1-docker.pkg.dev/$PROJECT_ID/microservices-repo/user-service:latest'
-      ]
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Push user-service'
+  args:
+    [
+      'push',
+      'us-central1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/user-service:latest'
+    ]
 
-  # Paso 3: Construir y subir product-service
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      [
-        'build',
-        '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices-repo/product-service:latest',
-        './backend/product-service'
-      ]
+# 3. Build y push product-service
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Build product-service'
+  args:
+    [
+      'build',
+      '-t', 'us-central1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/product-service:latest',
+      './backend/product-service'
+    ]
 
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      [
-        'push',
-        'us-central1-docker.pkg.dev/$PROJECT_ID/microservices-repo/product-service:latest'
-      ]
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'Push product-service'
+  args:
+    [
+      'push',
+      'us-central1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/product-service:latest'
+    ]
 
-  # Paso 4: Aplicar despliegues y servicios en GKE
-  - name: 'gcr.io/cloud-builders/kubectl'
-    args:
-      ['apply', '-f', 'k8s/mysql-deployment.yaml', '-n', '$NAMESPACE']
-
-  - name: 'gcr.io/cloud-builders/kubectl'
-    args:
-      ['apply', '-f', 'k8s/user-service-deployment.yaml', '-n', '$NAMESPACE']
-
-  - name: 'gcr.io/cloud-builders/kubectl'
-    args:
-      ['apply', '-f', 'k8s/product-service-deployment.yaml', '-n', '$NAMESPACE']
+# 4. Desplegar microservicios en Kubernetes
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+  id: 'Deploy to GKE'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      kubectl apply -f k8s/mysql-deployment.yaml -n ${_NAMESPACE}
+      kubectl apply -f k8s/user-service-deployment.yaml -n ${_NAMESPACE}
+      kubectl apply -f k8s/product-service-deployment.yaml -n ${_NAMESPACE}
 
 images:
-  - 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices-repo/user-service:latest'
-  - 'us-central1-docker.pkg.dev/$PROJECT_ID/microservices-repo/product-service:latest'
+  - 'us-central1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/user-service:latest'
+  - 'us-central1-docker.pkg.dev/${_PROJECT_ID}/${_REPO}/product-service:latest'
