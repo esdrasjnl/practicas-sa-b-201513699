@@ -329,4 +329,7 @@ steps:
   args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/user-service:$SHORT_SHA', './backend/user-service']
 # Push imagen User Service
 - name: 'gcr.io
+```
 
+
+![Deploy completo](./P7//img/deploy-full.png)
