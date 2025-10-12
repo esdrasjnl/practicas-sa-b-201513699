@@ -2,22 +2,20 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 steps:
-  # Paso 1: Autenticación en GKE y preparar kubectl
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:alpine'
-    id: 'Autenticación GKE'
+  # Paso 1: Autenticación y configuración de kubectl
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+    id: 'Configurar GKE'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        echo "Instalando kubectl..."
-        gcloud components install kubectl --quiet
         echo "Obteniendo credenciales del cluster..."
         gcloud container clusters get-credentials practicas-sa-cluster \
           --zone us-central1-c \
           --project groovy-treat-472922-b3
 
   # Paso 2: Desplegar MySQL
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:alpine'
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
     id: 'Desplegar MySQL'
     entrypoint: 'bash'
     args:
@@ -27,7 +25,7 @@ steps:
         kubectl apply -f k8s/mysql-deployment.yaml -n practicas-sa
 
   # Paso 3: Desplegar user-service
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:alpine'
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
     id: 'Desplegar User Service'
     entrypoint: 'bash'
     args:
@@ -37,7 +35,7 @@ steps:
         kubectl apply -f k8s/user-service-deployment.yaml -n practicas-sa
 
   # Paso 4: Desplegar product-service
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:alpine'
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
     id: 'Desplegar Product Service'
     entrypoint: 'bash'
     args:
@@ -47,13 +45,13 @@ steps:
         kubectl apply -f k8s/product-service-deployment.yaml -n practicas-sa
 
   # Paso 5: Esperar a que los pods estén listos
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:alpine'
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
     id: 'Esperar Pods Listos'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        echo "Esperando a que los pods estén listos..."
+        echo "Esperando a que todos los pods estén listos..."
         kubectl wait --for=condition=Ready pods --all -n practicas-sa --timeout=300s
 
 timeout: '1200s'
