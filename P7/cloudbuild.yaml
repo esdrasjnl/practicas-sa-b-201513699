@@ -1,7 +1,5 @@
-# cloudbuild.yaml para despliegue completo en GCP usando Kubernetes y Docker Hub
-
 options:
-  logging: CLOUD_LOGGING_ONLY  # evita problemas con service_account y logs
+  logging: CLOUD_LOGGING_ONLY
 
 substitutions:
   _PROJECT_ID: "groovy-treat-472922-b3"
@@ -10,8 +8,9 @@ substitutions:
   _NAMESPACE: "practicas-sa"
 
 steps:
-# 1️⃣ Configurar GKE
+# Configurar GKE
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+  dir: 'P7'
   entrypoint: 'bash'
   args:
     - '-c'
@@ -19,8 +18,9 @@ steps:
       echo "Autenticando con GKE..."
       gcloud container clusters get-credentials $_CLUSTER_NAME --zone $_CLUSTER_ZONE --project $_PROJECT_ID
 
-# 2️⃣ Crear namespace y secretos
+# Namespace y secretos
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+  dir: 'P7'
   entrypoint: 'bash'
   args:
     - '-c'
@@ -30,8 +30,9 @@ steps:
       echo "Aplicando secretos..."
       kubectl apply -f k8s/secrets.yaml
 
-# 3️⃣ Desplegar MySQL
+# Despliegue de MySQL
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+  dir: 'P7'
   entrypoint: 'bash'
   args:
     - '-c'
@@ -39,8 +40,9 @@ steps:
       echo "Desplegando MySQL..."
       kubectl apply -f k8s/mysql-deployment.yaml -n $_NAMESPACE
 
-# 4️⃣ Desplegar User Service
+# Despliegue User Service
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+  dir: 'P7'
   entrypoint: 'bash'
   args:
     - '-c'
@@ -48,8 +50,9 @@ steps:
       echo "Desplegando User Service..."
       kubectl apply -f k8s/user-service-deployment.yaml -n $_NAMESPACE
 
-# 5️⃣ Desplegar Product Service
+# Despliegue Product Service
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+  dir: 'P7'
   entrypoint: 'bash'
   args:
     - '-c'
@@ -57,8 +60,9 @@ steps:
       echo "Desplegando Product Service..."
       kubectl apply -f k8s/product-service-deployment.yaml -n $_NAMESPACE
 
-# 6️⃣ Desplegar Frontend
+# Despliegue Frontend
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+  dir: 'P7'
   entrypoint: 'bash'
   args:
     - '-c'
@@ -66,8 +70,9 @@ steps:
       echo "Desplegando Frontend..."
       kubectl apply -f k8s/frontend-deploy.yaml -n $_NAMESPACE
 
-# 7️⃣ Desplegar Ingress
+# Despliegue Ingress
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+  dir: 'P7'
   entrypoint: 'bash'
   args:
     - '-c'
@@ -75,8 +80,9 @@ steps:
       echo "Desplegando Ingress..."
       kubectl apply -f k8s/ingress.yaml -n $_NAMESPACE
 
-# 8️⃣ Esperar a que todos los pods estén listos
+# Esperar pods
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+  dir: 'P7'
   entrypoint: 'bash'
   args:
     - '-c'
