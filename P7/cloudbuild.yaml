@@ -1,5 +1,9 @@
 # P7/cloudbuild.yaml
 # Cloud Build para desplegar microservicios en GKE usando imágenes públicas de Docker Hub
+# Logging configurado para evitar error de service_account
+
+options:
+  logging: CLOUD_LOGGING_ONLY
 
 steps:
   # Paso 1: Autenticación en GKE
@@ -14,7 +18,7 @@ steps:
           --zone us-central1-c \
           --project groovy-treat-472922-b3
 
-  # Paso 2: Desplegar MySQL (si es que no está desplegado)
+  # Paso 2: Desplegar MySQL (si no está desplegado)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
     id: 'Desplegar MySQL'
     entrypoint: 'bash'
@@ -24,7 +28,7 @@ steps:
         echo "Aplicando despliegue de MySQL..."
         kubectl apply -f k8s/mysql-deployment.yaml -n practicas-sa
 
-  # Paso 3: Desplegar user-service (usa imagen pública de Docker Hub)
+  # Paso 3: Desplegar user-service
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
     id: 'Desplegar User Service'
     entrypoint: 'bash'
@@ -34,7 +38,7 @@ steps:
         echo "Aplicando despliegue de User Service..."
         kubectl apply -f k8s/user-service-deployment.yaml -n practicas-sa
 
-  # Paso 4: Desplegar product-service (usa imagen pública de Docker Hub)
+  # Paso 4: Desplegar product-service
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
     id: 'Desplegar Product Service'
     entrypoint: 'bash'
@@ -44,7 +48,7 @@ steps:
         echo "Aplicando despliegue de Product Service..."
         kubectl apply -f k8s/product-service-deployment.yaml -n practicas-sa
 
-# Opcional: esperar a que los pods estén listos
+  # Paso 5: Esperar a que los pods estén listos
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
     id: 'Esperar Pods Listos'
     entrypoint: 'bash'
@@ -54,5 +58,4 @@ steps:
         echo "Esperando a que los pods estén listos..."
         kubectl wait --for=condition=Ready pods --all -n practicas-sa --timeout=300s
 
-# Logs
 timeout: '1200s'
