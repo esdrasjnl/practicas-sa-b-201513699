@@ -1,0 +1,24 @@
+name: Build and Deploy
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build Docker Image
+        run: docker build -t ghcr.io/${{ github.repository }}:latest ./app
+      - name: Login to GitHub Container Registry
+        run: echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+      - name: Push Image
+        run: docker push ghcr.io/${{ github.repository }}:latest
+      - name: Deploy to Kubernetes
+        uses: azure/k8s-deploy@v4
+        with:
+          namespace: monitoring
+          manifests: |
+            manifests/k8s-deployment.yaml
+          kubeconfig: ${{ secrets.KUBECONFIG_BASE64 }}

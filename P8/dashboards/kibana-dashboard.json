@@ -1,0 +1,32 @@
+{
+  "type": "dashboard",
+  "updated_at": "2025-10-18T00:00:00Z",
+  "version": "1",
+  "attributes": {
+    "title": "Logs Centralizados - Práctica 8",
+    "hits": 0,
+    "description": "Dashboard para visualizar logs recolectados por Fluentd",
+    "panelsJSON": "[{\"version\":\"7.17.0\",\"type\":\"visualization\",\"panelIndex\":\"1\",\"size_x\":6,\"size_y\":4,\"col\":1,\"row\":1,\"id\":\"log-count-over-time\"},{\"version\":\"7.17.0\",\"type\":\"search\",\"panelIndex\":\"2\",\"size_x\":12,\"size_y\":6,\"col\":1,\"row\":5,\"id\":\"logs-table\"}]",
+    "optionsJSON": "{\"useMargins\":true,\"hidePanelTitles\":false}",
+    "timeRestore": false,
+    "kibanaSavedObjectMeta": {
+      "searchSourceJSON": "{\"query\":{\"language\":\"kuery\",\"query\":\"*\"},\"filter\":[]}"
+    }
+  },
+  "references": [
+    {
+      "name": "log-count-over-time",
+      "type": "visualization",
+      "id": "log-count-over-time"
+    },
+    {
+      "name": "logs-table",
+      "type": "search",
+      "id": "logs-table"
+    }
+  ],
+  "coreMigrationVersion": "7.17.0",
+  "migrationVersion": {
+    "dashboard": "7.17.0"
+  }
+}

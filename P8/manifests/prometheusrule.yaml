@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cpu-alert-rule
+  namespace: monitoring
+spec:
+  groups:
+  - name: node.rules
+    rules:
+    - alert: HighCPUUsage
+      expr: sum(rate(container_cpu_usage_seconds_total[5m])) by (instance) > 0.8
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Uso alto de CPU"
+        description: "La CPU supera el 80% en {{ $labels.instance }}"

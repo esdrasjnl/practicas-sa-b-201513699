@@ -1,0 +1,81 @@
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  _PROJECT_ID: "groovy-treat-472922-b3"
+  _CLUSTER_NAME: "practicas-sa-cluster"
+  _CLUSTER_ZONE: "us-central1-c"
+  _NAMESPACE: "practicas-sa"
+
+steps:
+# Configurar GKE
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+  dir: 'P7'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      echo "Autenticando con GKE..."
+      gcloud container clusters get-credentials $_CLUSTER_NAME --zone $_CLUSTER_ZONE --project $_PROJECT_ID
+
+# Namespace y secretos
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+  dir: 'P7'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      echo "Aplicando namespace..."
+      kubectl apply -f ./k8s/namespace.yaml
+      echo "Aplicando secretos..."
+      kubectl apply -f ./k8s/secrets.yaml
+
+# Despliegue de MySQL
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+  dir: 'P7'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      echo "Desplegando MySQL..."
+      kubectl apply -f ./k8s/mysql-deployment.yaml -n $_NAMESPACE
+
+# Despliegue User Service
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+  dir: 'P7'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      echo "Desplegando User Service..."
+      kubectl apply -f ./k8s/user-service-deployment.yaml -n $_NAMESPACE
+
+# Despliegue Product Service
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+  dir: 'P7'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      echo "Desplegando Product Service..."
+      kubectl apply -f ./k8s/product-service-deployment.yaml -n $_NAMESPACE
+
+# Despliegue Ingress
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+  dir: 'P7'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      echo "Desplegando Ingress..."
+      kubectl apply -f ./k8s/ingress.yaml -n $_NAMESPACE
+
+# Esperar pods
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+  dir: 'P7'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      echo "Esperando a que todos los pods estén listos..."
+      kubectl wait --for=condition=Ready pods --all -n $_NAMESPACE --timeout=300s

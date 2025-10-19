@@ -1,0 +1,107 @@
+services:
+
+  # ---------------- MySQL ----------------
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysql-db
+    env_file:
+      - .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      retries: 5
+
+  # ---------------- User Service ----------------
+  user-service:
+    build:
+      context: ./backend/user-service
+    image: ${DOCKER_USER}/user-service:${IMAGE_TAG_LATEST}
+    env_file:
+      - .env
+    environment:
+      DB_HOST: mysql-db
+      DB_USER: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      DB_NAME: ${DB_NAME}
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    ports:
+      - "4000:4000"
+
+  # ---------------- Product Service ----------------
+  product-service:
+    build:
+      context: ./python-services/product-service
+    image: ${DOCKER_USER}/product-service:${IMAGE_TAG_LATEST}
+    env_file:
+      - .env
+    environment:
+      DB_HOST: mysql-db
+      DB_USER: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      DB_NAME: ${DB_NAME}
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    ports:
+      - "4001:4000"
+
+  # ---------------- Orders Service ----------------
+  orders-service:
+    build:
+      context: ./backend/orders-service
+    image: ${DOCKER_USER}/orders-service:${IMAGE_TAG_LATEST}
+    env_file:
+      - .env
+    environment:
+      DB_HOST: mysql-db
+      DB_USER: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      DB_NAME: ${DB_NAME}
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    ports:
+      - "4002:4000"
+
+  # ---------------- API Gateway ----------------
+  api-gateway:
+    build:
+      context: ./backend/api-gateway
+    image: ${DOCKER_USER}/api-gateway:${IMAGE_TAG_LATEST}
+    env_file:
+      - .env
+    depends_on:
+      user-service:
+        condition: service_healthy
+      product-service:
+        condition: service_healthy
+      orders-service:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+
+  # ---------------- Frontend ----------------
+  frontend:
+    build:
+      context: ./frontend
+    image: ${DOCKER_USER}/frontend:${IMAGE_TAG_LATEST}
+    env_file:
+      - .env
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+
+volumes:
+  mysql_data:

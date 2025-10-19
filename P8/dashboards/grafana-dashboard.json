@@ -1,0 +1,97 @@
+{
+  "id": null,
+  "uid": "practica8-dashboard",
+  "title": "Monitoreo General - Práctica 8",
+  "tags": ["prometheus", "monitoring", "software-avanzado"],
+  "timezone": "browser",
+  "schemaVersion": 30,
+  "version": 1,
+  "refresh": "30s",
+  "panels": [
+    {
+      "type": "graph",
+      "title": "Uso de CPU por Nodo (%)",
+      "targets": [
+        {
+          "expr": "100 - (avg by (instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+          "legendFormat": "{{instance}}",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8}
+    },
+    {
+      "type": "graph",
+      "title": "Uso de Memoria (%)",
+      "targets": [
+        {
+          "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100",
+          "legendFormat": "{{instance}}",
+          "refId": "B"
+        }
+      ],
+      "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8}
+    },
+    {
+      "type": "graph",
+      "title": "Tráfico de Red (Bytes/s)",
+      "targets": [
+        {
+          "expr": "irate(node_network_receive_bytes_total[5m])",
+          "legendFormat": "Rx: {{instance}}",
+          "refId": "C"
+        },
+        {
+          "expr": "irate(node_network_transmit_bytes_total[5m])",
+          "legendFormat": "Tx: {{instance}}",
+          "refId": "D"
+        }
+      ],
+      "gridPos": {"x": 0, "y": 8, "w": 24, "h": 8}
+    },
+    {
+      "type": "stat",
+      "title": "Total de Peticiones HTTP (app_requests_total)",
+      "targets": [
+        {
+          "expr": "sum(app_requests_total)",
+          "refId": "E"
+        }
+      ],
+      "gridPos": {"x": 0, "y": 16, "w": 6, "h": 4}
+    },
+    {
+      "type": "table",
+      "title": "Pods Monitoreados",
+      "targets": [
+        {
+          "expr": "kube_pod_info",
+          "refId": "F"
+        }
+      ],
+      "gridPos": {"x": 6, "y": 16, "w": 18, "h": 6}
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "namespace",
+        "type": "query",
+        "label": "Namespace",
+        "datasource": "Prometheus",
+        "query": "label_values(kube_pod_info, namespace)",
+        "refresh": 2
+      }
+    ]
+  },
+  "annotations": {
+    "list": [
+      {
+        "name": "Alertas",
+        "type": "dashboard",
+        "enable": true,
+        "iconColor": "rgba(255, 96, 96, 1)"
+      }
+    ]
+  }
+}
