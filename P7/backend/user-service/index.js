@@ -38,7 +38,7 @@ app.get('/api/users', async (req, res) => {
 
 app.get('/api/test', async (req, res) => {
   try {
-    const [rows] = {"calificacion": "test"}
+    const [rows] = {"calificacion": "test "}
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
