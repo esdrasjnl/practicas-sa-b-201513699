@@ -1,0 +1,29 @@
+replicaCount: 1
+
+logstashPipeline:
+  logstash.conf: |
+    input {
+      beats {
+        port => 5044
+      }
+    }
+
+    filter {
+      # Aquí puedes añadir filtros específicos
+    }
+
+    output {
+      elasticsearch {
+        hosts => ["http://elasticsearch-master:9200"]
+        user => "elastic"
+        password => "changeme"
+      }
+    }
+
+resources:
+  requests:
+    cpu: "200m"
+    memory: "512Mi"
+  limits:
+    cpu: "500m"
+    memory: "1Gi"

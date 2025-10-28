@@ -1,25 +1,9 @@
-# ============================================================
-# 🧠 Archivo: infra/elk/kibana-values.yaml
-# Descripción:
-#   Configuración de Kibana para Helm en Kubernetes (GKE)
-#   - Conexión al servicio Elasticsearch
-#   - Desactiva hook pre-install que causa timeout
-#   - Ajusta recursos y tipo de servicio
-# ============================================================
+replicas: 1
 
-# Nombre del servicio que apunta a Elasticsearch
 elasticsearchHosts: "http://elasticsearch-master:9200"
+elasticsearchUsername: "elastic"
+elasticsearchPassword: "changeme"
 
-# Si Elasticsearch tiene autenticación activada, agrega:
-# elasticsearch.username: "elastic"
-# elasticsearch.password: "changeme"
-
-# Tipo de servicio para exponer Kibana
-service:
-  type: LoadBalancer
-  port: 5601
-
-# Recursos mínimos para que funcione bien en GKE
 resources:
   requests:
     cpu: "200m"
@@ -27,35 +11,3 @@ resources:
   limits:
     cpu: "500m"
     memory: "1Gi"
-
-# Deshabilitar el job de pre-instalación que causa errores
-# Este hook intenta verificar conexión a ES antes de desplegar, pero suele fallar
-hooks:
-  enabled: false
-
-# Variables de entorno opcionales (útiles si usas namespaces personalizados)
-extraEnvs:
-  - name: ELASTICSEARCH_HOSTS
-    value: "http://elasticsearch-master:9200"
-  - name: SERVER_PUBLICBASEURL
-    value: "http://kibana:5601"
-  - name: SERVER_NAME
-    value: "kibana"
-
-# Persistencia desactivada (opcional)
-# Puedes habilitarla si deseas conservar configuraciones entre reinicios
-persistence:
-  enabled: false
-
-# Healthcheck configurado para más tolerancia
-livenessProbe:
-  initialDelaySeconds: 60
-  timeoutSeconds: 5
-  periodSeconds: 10
-  failureThreshold: 10
-
-readinessProbe:
-  initialDelaySeconds: 60
-  timeoutSeconds: 5
-  periodSeconds: 10
-  failureThreshold: 10

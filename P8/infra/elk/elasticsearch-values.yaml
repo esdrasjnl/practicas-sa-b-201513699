@@ -1,13 +1,21 @@
 replicas: 1
-esJavaOpts: "-Xmx512m -Xms512m"
+
+esConfig:
+  elasticsearch.yml: |
+    xpack.security.enabled: true
+
 resources:
   requests:
-    cpu: "200m"
+    cpu: "500m"
     memory: "1Gi"
-persistence:
-  enabled: false
+  limits:
+    cpu: "1"
+    memory: "2Gi"
+
 volumeClaimTemplate:
-  accessModes: ["ReadWriteOnce"]
+  accessModes: [ "ReadWriteOnce" ]
   resources:
     requests:
-      storage: 1Gi
+      storage: 5Gi
+
+password: "changeme"
