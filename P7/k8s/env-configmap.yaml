@@ -1,0 +1,18 @@
+apiVersion: v1
+data:
+  CLUSTER_NAME: practicas-sa-cluster
+  CLUSTER_ZONE: us-central1-c
+  DB_HOST: mysql-db
+  DB_NAME: appdb
+  DOCKER_USER: esdrasjnl
+  IMAGE_TAG_LATEST: latest
+  IMAGE_TAG_V: v1.0.0
+  INGRESS_HOST: practicas.local
+  MYSQL_ROOT_PASSWORD: rootpass
+  NAMESPACE: practicas-sa
+  PROJECT_ID: groovy-treat-472922-b3
+kind: ConfigMap
+metadata:
+  labels:
+    io.kompose.service: api-gateway-env
+  name: env

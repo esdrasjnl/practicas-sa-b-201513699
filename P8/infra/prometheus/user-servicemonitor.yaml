@@ -1,0 +1,19 @@
+# infra/prometheus/user-servicemonitor.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: user-servicemonitor
+  namespace: monitoring    # debe estar donde Prometheus espera ServiceMonitors
+  labels:
+    release: prometheus   # coincide con el release name del helm install
+spec:
+  selector:
+    matchLabels:
+      app: user
+  namespaceSelector:
+    matchNames:
+      - chapinflix
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 15s

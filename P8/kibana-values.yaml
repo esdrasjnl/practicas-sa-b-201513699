@@ -1,0 +1,34 @@
+replicaCount: 1
+
+image:
+  repository: docker.elastic.co/kibana/kibana
+  tag: 8.5.1
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 5601
+
+elasticsearchHosts: "https://elasticsearch-master:9200"
+elasticsearchUsername: "elastic"
+elasticsearchPassword: "O1bBGbo4EmFQSLaS"
+
+elasticsearchSSL:
+  enabled: true
+  verificationMode: full
+  certificateAuthorities: "/usr/share/kibana/config/certs/ca.crt"
+
+kibanaConfig:
+  server.name: "kibana"
+  server.host: "0.0.0.0"
+  elasticsearch.hosts: "https://elasticsearch-master:9200"
+  elasticsearch.username: "elastic"
+  elasticsearch.password: "O1bBGbo4EmFQSLaS"
+  xpack.security.enabled: "true"
+
+persistence:
+  enabled: false
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

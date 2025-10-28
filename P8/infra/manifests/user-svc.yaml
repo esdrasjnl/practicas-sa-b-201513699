@@ -1,0 +1,15 @@
+# infra/manifests/user-svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-metrics
+  namespace: chapinflix
+  labels:
+    app: user
+spec:
+  selector:
+    app: user
+  ports:
+  - name: metrics
+    port: 9100        # puerto del servicio
+    targetPort: 3000  # puerto en el container donde está /metrics

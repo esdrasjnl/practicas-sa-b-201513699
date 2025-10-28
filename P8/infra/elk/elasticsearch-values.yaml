@@ -1,0 +1,13 @@
+replicas: 1
+esJavaOpts: "-Xmx512m -Xms512m"
+resources:
+  requests:
+    cpu: "200m"
+    memory: "1Gi"
+persistence:
+  enabled: false
+volumeClaimTemplate:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi

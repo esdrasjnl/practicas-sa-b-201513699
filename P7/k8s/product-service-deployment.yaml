@@ -1,52 +1,37 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose.yml -o k8s/
+    kompose.version: 1.37.0 (HEAD)
+  labels:
+    io.kompose.service: product-service
   name: product-service
-  namespace: practicas-sa
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: product-service
+      io.kompose.service: product-service
   template:
     metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose.yml -o k8s/
+        kompose.version: 1.37.0 (HEAD)
       labels:
-        app: product-service
+        io.kompose.service: product-service
     spec:
       containers:
-        - name: product-service
+        - env:
+            - name: DB_PASSWORD
+              value: rootpass
+            - name: DB_USER
+              value: root
+          envFrom:
+            - configMapRef:
+                name: env
           image: esdrasjnl/product-service:latest
+          name: product-service
           ports:
             - containerPort: 4000
-          env:
-            - name: DB_HOST
-              value: mysql
-            - name: DB_USER
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-secret
-                  key: DB_USER
-            - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-secret
-                  key: DB_PASSWORD
-            - name: DB_NAME
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-secret
-                  key: DB_NAME
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: product-service
-  namespace: practicas-sa
-spec:
-  selector:
-    app: product-service
-  ports:
-    - protocol: TCP
-      port: 4000
-      targetPort: 4000
-  type: ClusterIP
+              protocol: TCP
+      restartPolicy: Always

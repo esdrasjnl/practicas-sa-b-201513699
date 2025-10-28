@@ -5,20 +5,20 @@ metadata:
     kompose.cmd: kompose convert -f docker-compose.yml -o k8s/
     kompose.version: 1.37.0 (HEAD)
   labels:
-    io.kompose.service: user-service
-  name: user-service
+    io.kompose.service: orders-service
+  name: orders-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      io.kompose.service: user-service
+      io.kompose.service: orders-service
   template:
     metadata:
       annotations:
         kompose.cmd: kompose convert -f docker-compose.yml -o k8s/
         kompose.version: 1.37.0 (HEAD)
       labels:
-        io.kompose.service: user-service
+        io.kompose.service: orders-service
     spec:
       containers:
         - env:
@@ -29,8 +29,8 @@ spec:
           envFrom:
             - configMapRef:
                 name: env
-          image: esdrasjnl/user-service:latest
-          name: user-service
+          image: esdrasjnl/orders-service:latest
+          name: orders-service
           ports:
             - containerPort: 4000
               protocol: TCP
