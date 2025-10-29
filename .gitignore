@@ -1,3 +1,4 @@
 P9/user-service/.env
 P9/user-service/node_modules
 P9/product-service/node_modules
+P9/chatbot-backend/.env
