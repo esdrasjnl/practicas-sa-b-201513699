@@ -1,6 +1,8 @@
 # Práctica 9 — Chatbot utilizando IA
 
+> Manual paso a paso (archivo continuo) — carpeta: `P9`
 
+---
 
 ## Índice
 
@@ -503,5 +505,28 @@ Para desarrollo sin Docker, arrancar cada servicio en su puerto local y ejecutar
 
 ---
 
+## Manual de uso (resumen para el entregable)
 
+1. Abrir frontend (http://localhost:3000)
+2. Escribir un mensaje en el chat (p.ej. "Hola")
+3. El frontend enviará `POST /api/chat` al `chatbot-backend`.
+4. Backend llamará a `intent-service` y según la intención llamará a `qa-service` o `ai-service`.
+5. La respuesta se mostrará en pantalla y los logs contendrán el `trace` con la ruta tomada.
+
+Ejemplos de inputs para el PDF de entrega:
+- "Hola"
+- "Quiero ver mi factura 1234"
+- "Explícame cómo instalar Docker en Ubuntu"
+
+---
+
+## Notas finales y recomendaciones
+
+- Prioriza que el **frontend exista y sea funcional** — la rúbrica lo exige fuertemente.
+- Si no puedes correr un LLM local por recursos, documenta la limitación y usa una combinación de reglas + retrieval (QA) en `ai-service` para demostrar el comportamiento inteligente.
+- Incluye un apartado en la documentación donde expliques la elección de la herramienta IA, sus *funcionalidades, límites y costos* (si usaste algún servicio pago o modelo que tenga licencia), tal como lo pide la práctica.
+
+---
+
+**Fin del manual (archivo continuo).**
 

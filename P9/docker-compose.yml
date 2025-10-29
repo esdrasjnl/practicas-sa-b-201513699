@@ -1,0 +1,57 @@
+version: '3.8'
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: p9_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: p9db
+      MYSQL_USER: p9
+      MYSQL_PASSWORD: p9pass
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  user-service:
+    image: esdrasjnl/user-service:latest
+    container_name: user-service
+    restart: unless-stopped
+    environment:
+      - DB_HOST=mysql
+      - DB_USER=p9
+      - DB_PASSWORD=p9pass
+      - DB_NAME=p9db
+      - PORT=8010
+    ports:
+      - "8010:8010"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  product-service:
+    image: esdrasjnl/product-service:latest
+    container_name: product-service
+    restart: unless-stopped
+    environment:
+      - DB_HOST=mysql
+      - DB_USER=p9
+      - DB_PASSWORD=p9pass
+      - DB_NAME=p9db
+      - PORT=8011
+    ports:
+      - "8011:8011"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+volumes:
+  mysql_data:
