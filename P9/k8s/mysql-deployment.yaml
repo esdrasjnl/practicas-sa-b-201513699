@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: practicas
+spec:
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: "rootpass"
+            - name: MYSQL_DATABASE
+              value: "p9db"
+            - name: MYSQL_USER
+              value: "p9"
+            - name: MYSQL_PASSWORD
+              value: "p9pass"
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: mysql-persistent-storage
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mysql-persistent-storage
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: practicas
+spec:
+  type: ClusterIP
+  selector:
+    app: mysql
+  ports:
+    - port: 3306
+      targetPort: 3306

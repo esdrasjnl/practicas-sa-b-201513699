@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-service
+  namespace: practicas
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: product-service
+  template:
+    metadata:
+      labels:
+        app: product-service
+    spec:
+      containers:
+      - name: product-service
+        image: esdrasjnl/product-service:latest
+        ports:
+        - containerPort: 8011
+        envFrom:
+        - secretRef:
+            name: product-secret  # Aquí se usan las variables de product-secret.yaml
+      imagePullSecrets:
+      - name: dockerhub-secret  # Si tu imagen es privada

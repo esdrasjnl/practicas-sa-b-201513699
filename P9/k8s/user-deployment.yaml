@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+  namespace: practicas
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+    spec:
+      containers:
+      - name: user-service
+        image: esdrasjnl/user-service:latest
+        ports:
+        - containerPort: 8010
+        envFrom:
+        - secretRef:
+            name: user-secret   # Aquí se usan las variables de user-secret.yaml
+      imagePullSecrets:
+      - name: dockerhub-secret  # Si tu imagen es privada
